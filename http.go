@@ -18,11 +18,11 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/tls"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
 
-	"github.com/superfly/go-proxy/log"
 	"golang.org/x/net/http2"
 )
 
@@ -71,9 +71,8 @@ func (h *http2Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			con, rw, err := hijacker.Hijack()
 			defer con.Close()
 			if err != nil {
-				log.WithError(err).Error("hijack failed")
 			} else if n, err := io.MultiReader(req.Body, rw).Read([]byte(body)); n != len(body) {
-				log.WithError(err).Errorf("read did not match body len: %d", n)
+				fmt.Printf("read did not match body len: %d, err: %s\n", n, err)
 			} else {
 				wrap := io.MultiReader(bytes.NewBuffer([]byte(http2.ClientPreface)), rw)
 				nc := &h2conn{

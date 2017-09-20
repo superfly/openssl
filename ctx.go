@@ -21,13 +21,10 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"runtime"
 	"sync"
 	"time"
 	"unsafe"
-
-	"github.com/superfly/go-proxy/log"
 )
 
 var (
@@ -422,8 +419,7 @@ type VerifyCallback func(ok bool, store *CertificateStoreCtx) bool
 func go_ssl_ctx_verify_cb_thunk(p unsafe.Pointer, ok C.int, ctx *C.X509_STORE_CTX) C.int {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Fatalf("openssl: verify callback panic'd: %v", err)
-			os.Exit(1)
+			fmt.Printf("[fatal] openssl: verify callback panic'd: %s\n", err)
 		}
 	}()
 	verify_cb := (*Ctx)(p).verify_cb
