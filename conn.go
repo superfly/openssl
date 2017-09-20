@@ -27,7 +27,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/superfly/go-proxy/openssl/utils"
+	"github.com/superfly/openssl/utils"
 )
 
 var (

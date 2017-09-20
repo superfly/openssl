@@ -25,7 +25,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/superfly/go-proxy/openssl/utils"
+	"github.com/superfly/openssl/utils"
 )
 
 var (
