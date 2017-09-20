@@ -27,7 +27,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/spacemonkeygo/openssl/utils"
+	"github.com/superfly/go-proxy/openssl/utils"
 )
 
 var (
@@ -145,7 +145,9 @@ func newConn(conn net.Conn, ctx *Ctx) (*Conn, error) {
 		conn:     conn,
 		ctx:      ctx,
 		into_ssl: into_ssl,
-		from_ssl: from_ssl}
+		from_ssl: from_ssl,
+	}
+
 	runtime.SetFinalizer(c, func(c *Conn) {
 		c.into_ssl.Disconnect(into_ssl_cbio)
 		c.from_ssl.Disconnect(from_ssl_cbio)

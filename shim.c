@@ -439,6 +439,17 @@ long X_SSL_CTX_set_tlsext_servername_callback(
 	return SSL_CTX_set_tlsext_servername_callback(ctx, cb);
 }
 
+// void X_SSL_CTX_set_alpn_select_cb(SSL_CTX* ctx, int (*cb)(
+// 	SSL *con,
+// 	const unsigned char **out,
+// 	unsigned char *outlen,
+// 	const unsigned char *in,
+// 	unsigned int inlen,
+// 	void *arg),
+// void *args)) {
+// 	return SSL_CTX_set_alpn_select_cb(ctx, cb);
+// }
+
 int X_SSL_CTX_verify_cb(int ok, X509_STORE_CTX* store) {
 	SSL* ssl = (SSL *)X509_STORE_CTX_get_ex_data(store,
 			SSL_get_ex_data_X509_STORE_CTX_idx());
@@ -656,4 +667,55 @@ int X_sk_X509_num(STACK_OF(X509) *sk) {
 
 X509 *X_sk_X509_value(STACK_OF(X509)* sk, int i) {
    return sk_X509_value(sk, i);
+}
+
+#define PROTO_ALPN "\x2h2"
+#define PROTO_ALPN_LEN (sizeof(PROTO_ALPN) - 1)
+
+#define HTTP_1_1_ALPN "\x8http/1.1"
+#define HTTP_1_1_ALPN_LEN (sizeof(HTTP_1_1_ALPN) - 1)
+
+static int select_next_protocol(unsigned char **out, unsigned char *outlen,
+	const unsigned char *in, unsigned int inlen,
+	const char *key, unsigned int keylen) {
+	unsigned int i;
+	for (i = 0; i + keylen <= inlen; i += (unsigned int)(in[i] + 1)) {
+		if (memcmp(&in[i], key, keylen) == 0) {
+			*out = (unsigned char *)&in[i + 1];
+			*outlen = in[i];
+			return 0;
+		}
+	}
+	return -1;
+}
+
+int select_http2_protocol(unsigned char **out, unsigned char *outlen,
+                                 const unsigned char *in, unsigned int inlen) {
+  if (select_next_protocol(out, outlen, in, inlen, PROTO_ALPN,
+                           PROTO_ALPN_LEN) == 0) {
+    return 1;
+  }
+  if (select_next_protocol(out, outlen, in, inlen, HTTP_1_1_ALPN,
+                           HTTP_1_1_ALPN_LEN) == 0) {
+    return 0;
+  }
+  return -1;
+}
+
+static int alpn_select_proto_cb(SSL *ssl, const unsigned char **out,
+	unsigned char *outlen, const unsigned char *in,
+	unsigned int inlen, void *arg) {
+	int rv;
+
+	rv = select_http2_protocol((unsigned char **)out, outlen, in, inlen);
+
+	if (rv != 1) {
+		return SSL_TLSEXT_ERR_NOACK;
+	}
+
+	return SSL_TLSEXT_ERR_OK;
+}
+
+void support_http2(SSL_CTX* ctx) {
+	return SSL_CTX_set_alpn_select_cb(ctx, alpn_select_proto_cb, NULL);
 }

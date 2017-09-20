@@ -27,13 +27,11 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/spacemonkeygo/spacelog"
+	"github.com/superfly/go-proxy/log"
 )
 
 var (
 	ssl_ctx_idx = C.X_SSL_CTX_new_index()
-
-	logger = spacelog.GetLogger()
 )
 
 type Ctx struct {
@@ -424,7 +422,7 @@ type VerifyCallback func(ok bool, store *CertificateStoreCtx) bool
 func go_ssl_ctx_verify_cb_thunk(p unsafe.Pointer, ok C.int, ctx *C.X509_STORE_CTX) C.int {
 	defer func() {
 		if err := recover(); err != nil {
-			logger.Critf("openssl: verify callback panic'd: %v", err)
+			log.Fatalf("openssl: verify callback panic'd: %v", err)
 			os.Exit(1)
 		}
 	}()
@@ -490,6 +488,10 @@ type TLSExtServernameCallback func(ssl *SSL) SSLTLSExtErr
 func (c *Ctx) SetTLSExtServernameCallback(sni_cb TLSExtServernameCallback) {
 	c.sni_cb = sni_cb
 	C.X_SSL_CTX_set_tlsext_servername_callback(c.ctx, (*[0]byte)(C.sni_cb))
+}
+
+func (c *Ctx) SupportHTTP2() {
+	C.support_http2(c.ctx)
 }
 
 func (c *Ctx) SetSessionId(session_id []byte) error {

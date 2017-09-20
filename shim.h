@@ -60,6 +60,12 @@ extern const SSL_METHOD *X_TLSv1_2_method();
 #if defined SSL_CTRL_SET_TLSEXT_HOSTNAME
 extern int sni_cb(SSL *ssl_conn, int *ad, void *arg);
 #endif
+extern void alpn_cb(SSL *ssl,
+        const unsigned char **out,
+        unsigned char *outlen,
+        const unsigned char *in,
+        unsigned int inlen,
+        void *arg);
 extern int X_SSL_verify_cb(int ok, X509_STORE_CTX* store);
 
 /* SSL_CTX methods */
@@ -77,6 +83,7 @@ extern long X_SSL_CTX_get_timeout(SSL_CTX* ctx);
 extern long X_SSL_CTX_add_extra_chain_cert(SSL_CTX* ctx, X509 *cert);
 extern long X_SSL_CTX_set_tmp_ecdh(SSL_CTX* ctx, EC_KEY *key);
 extern long X_SSL_CTX_set_tlsext_servername_callback(SSL_CTX* ctx, int (*cb)(SSL *con, int *ad, void *args));
+extern void support_http2(SSL_CTX* ctx);
 extern int X_SSL_CTX_verify_cb(int ok, X509_STORE_CTX* store);
 extern long X_SSL_CTX_set_tmp_dh(SSL_CTX* ctx, DH *dh);
 extern long X_PEM_read_DHparams(SSL_CTX* ctx, DH *dh);
@@ -154,4 +161,3 @@ extern const ASN1_TIME *X_X509_get0_notBefore(const X509 *x);
 extern const ASN1_TIME *X_X509_get0_notAfter(const X509 *x);
 extern int X_sk_X509_num(STACK_OF(X509) *sk);
 extern X509 *X_sk_X509_value(STACK_OF(X509)* sk, int i);
-
