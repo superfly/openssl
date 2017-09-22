@@ -19,7 +19,6 @@ import "C"
 
 import (
 	"fmt"
-	"os"
 	"unsafe"
 )
 
@@ -124,7 +123,6 @@ func go_ticket_key_cb_thunk(p unsafe.Pointer, s *C.SSL, key_name *C.uchar,
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Printf("[crit] openssl: ticket key callback panic'd: %v\n", err)
-			os.Exit(1)
 		}
 	}()
 
